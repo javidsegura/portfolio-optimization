@@ -1,0 +1,6 @@
+
+
+- Shorting (not only long positions)
+- Inefficent plots ploting 
+- Asset pricing
+- Borrowing money for the allocation price 

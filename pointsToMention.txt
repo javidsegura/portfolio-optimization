@@ -1,0 +1,7 @@
+
+
+- Trying to fix Rp may yield unsolvable results
+- You cant exceed expected returns with diversification, just minimize risks (cause its a linear combination)
+- Timeseries showing accuracy of results 
+- Excess return???
+- What is this: ∝ 
