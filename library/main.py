@@ -42,8 +42,6 @@ class Portfolio:
             self.plots.plot_securities_distribution()
 
 
-
-
       def update_data(self):
             portfolios = [self.global_minimum_variance_portfolio, self.efficient_frontier_portfolio, self.sharpe_portfolio]
             for portfolio in portfolios:

@@ -46,7 +46,6 @@ class EfficientFrontierPortfolio(BasePortfolio):
             self._compute_components()
             min_u = self.MU.min()
             max_u = self.MU.max()
-            print(f"Min u: {min_u}, Max u: {max_u}")
             u_range = np.linspace(min_u, max_u, 100)
             weights = []
             variances = []

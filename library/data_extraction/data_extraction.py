@@ -21,16 +21,20 @@ class DataExtractor:
             Download adjusted price data for a single ticker and return its daily return Series.
             """
             print(f"=> Downloading data for {ticker} from {start} to {end}")
-            df = yf.download(ticker, start=start, end=end, auto_adjust=False) 
-            if df.empty:
-                  raise ValueError(f"No data for {ticker} in {start}–{end}")
-            prices = df["Adj Close"] 
-            metrics = prices.describe()
-            ret = prices.pct_change().dropna()
-            ret.name = ticker
-            ret.reset_index(inplace=True)
-            ret.rename(columns={ticker: "Adj_Close_Change_(%)"}, inplace=True)
-            return ret, metrics
+            try:
+                  df = yf.download(ticker, start=start, end=end, auto_adjust=False) 
+                  if df.empty:
+                        raise ValueError(f"No data for {ticker} in {start}–{end}")
+                  prices = df["Adj Close"] 
+                  metrics = prices.describe()
+                  ret = prices.pct_change().dropna()
+                  ret.name = ticker
+                  ret.reset_index(inplace=True)
+                  ret.rename(columns={ticker: "Adj_Close_Change_(%)"}, inplace=True)
+                  return ret, metrics
+            except Exception as e:
+                  print(f"Error downloading data for {ticker}: {e}")
+                  return None, None
       
 
       def build_securities(self):
@@ -43,6 +47,8 @@ class DataExtractor:
             R = {}
             for t in self.list_of_tickers:
                   sr, metrics = self._get_return_series(t, self.start_date, self.end_date)
+                  if sr is None:
+                        continue
                   R[t] = {
                         "returns": sr,
                         "mean": sr["Adj_Close_Change_(%)"].mean(),
@@ -82,6 +88,80 @@ class DataExtractor:
             self.SIGMA = SIGMA
             self.SIGMA_INV = np.linalg.inv(SIGMA)
             return SIGMA
+
+      def pca_shrinkage(self, n_components=None, var_threshold=None):
+            """
+            Perform PCA-based spectral filtering on the covariance matrix by shrinking small eigenvalues.
+
+            Mathematical Basis
+            ------------------
+            Given the covariance matrix Σ, its eigendecomposition is:
+                  Σ = Q Λ Qᵀ,
+            where Q = [q₁, …, qₙ] are the orthonormal eigenvectors and Λ = diag(λ₁, …, λₙ) are eigenvalues,
+            sorted so that λ₁ ≥ λ₂ ≥ … ≥ λₙ ≥ 0.
+
+            To filter noise, we keep the top k eigenvalues corresponding to dominant risk factors,
+            and shrink the remaining (tail) eigenvalues to their average:
+                  λᵢ' = λᵢ for i = 1…k,
+                  λⱼ' = (1/(n-k)) * Σ_{j=k+1}ⁿ λⱼ  for j = k+1…n.
+
+            The filtered covariance is reconstructed as:
+                  Σ_filtered = Q Λ' Qᵀ,
+            which preserves main variance directions while damping noisy dimensions.
+
+            Parameters
+            ----------
+            Sigma : np.ndarray, shape (n_assets, n_assets)
+                  Sample covariance matrix.
+            n_components : int, optional
+                  Number of top eigenvalues to keep (k).
+            var_threshold : float, optional
+                  Fraction of total variance to preserve (0 < var_threshold <= 1).
+                  If provided, determines k s.t. cumulative variance ≥ threshold.
+
+            Returns
+            -------
+            Sigma_filtered : np.ndarray
+                  Covariance matrix reconstructed from filtered eigenvalues.
+
+            Notes
+            -----
+            - If both n_components and var_threshold are None, raises ValueError.
+            - This reduces the condition number of Σ, improving numerical stability of Σ⁻¹.
+            """
+            # Eigen-decomposition
+            eigvals, eigvecs = np.linalg.eigh(self.SIGMA)
+            # Sort descending
+            idx = np.argsort(eigvals)[::-1]
+            eigvals_sorted = eigvals[idx]
+            eigvecs_sorted = eigvecs[:, idx]
+
+            # Determine number of components k
+            if var_threshold is not None:
+                  total_var = eigvals_sorted.sum()
+                  frac = np.cumsum(eigvals_sorted) / total_var
+                  k = np.searchsorted(frac, var_threshold) + 1
+            elif n_components is not None:
+                  k = n_components
+            else:
+                  raise ValueError("Specify n_components or var_threshold for spectral shrinkage.")
+
+            # Shrink tail eigenvalues to their average
+            if k < len(eigvals_sorted):
+                  avg_tail = eigvals_sorted[k:].mean()
+                  new_eigvals = np.concatenate([
+                        eigvals_sorted[:k],
+                        np.full(len(eigvals_sorted) - k, avg_tail)
+                  ])
+            else:
+                  new_eigvals = eigvals_sorted.copy()
+
+            # Reconstruct filtered covariance
+            Sigma_filtered = eigvecs_sorted @ np.diag(new_eigvals) @ eigvecs_sorted.T
+            self.SIGMA = Sigma_filtered
+            self.SIGMA_INV = np.linalg.inv(Sigma_filtered)
+            return self.SIGMA, self.SIGMA_INV
+ 
       
       def analayze_single_security_returns(self):
             for security in self.securities:
