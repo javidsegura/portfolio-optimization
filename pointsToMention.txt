@@ -5,3 +5,10 @@
 - Timeseries showing accuracy of results 
 - Excess return???
 - What is this: ∝ 
+- GMVP as the borderline?
+- Areas for improvement
+       - Study of concavity
+- MPT is all about minimizing risk via diversification, not by increasing E[] over diversification
+- Dont we need to check fo the symbols in the grad to determine min or max?
+- Why sometimes is it unrealistic?
+- Excess return vs return
