@@ -1,10 +1,11 @@
-
 import yfinance as yf
 import pandas as pd
 from scipy.stats import jarque_bera
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 class DataExtractor:
       def __init__(self):
@@ -21,21 +22,17 @@ class DataExtractor:
             Download adjusted price data for a single ticker and return its daily return Series.
             """
             print(f"=> Downloading data for {ticker} from {start} to {end}")
-            try:
-                  df = yf.download(ticker, start=start, end=end, auto_adjust=False) 
-                  if df.empty:
+            df = yf.download(ticker, start=start, end=end, auto_adjust=False) 
+            if df.empty:
                         raise ValueError(f"No data for {ticker} in {start}–{end}")
-                  prices = df["Adj Close"] 
-                  metrics = prices.describe()
-                  ret = prices.pct_change().dropna()
-                  ret.name = ticker
-                  ret.reset_index(inplace=True)
-                  ret.rename(columns={ticker: "Adj_Close_Change_(%)"}, inplace=True)
-                  return ret, metrics
-            except Exception as e:
-                  print(f"Error downloading data for {ticker}: {e}")
-                  return None, None
-      
+            prices = df["Adj Close"] 
+            metrics = prices.describe()
+            ret = prices.pct_change().dropna()
+            ret.name = ticker
+            ret.reset_index(inplace=True)
+            ret.rename(columns={ticker: "Adj_Close_Change_(%)"}, inplace=True)
+            return ret, metrics
+ 
 
       def build_securities(self):
             """
@@ -43,18 +40,36 @@ class DataExtractor:
                   - "returns": pd.Series of daily returns
                   - "mean":    float mean(return)
                   - "std":     float std(return)
+            Uses multiprocessing to parallelize data downloads.
             """
             R = {}
-            for t in self.list_of_tickers:
-                  sr, metrics = self._get_return_series(t, self.start_date, self.end_date)
-                  if sr is None:
-                        continue
-                  R[t] = {
-                        "returns": sr,
-                        "mean": sr["Adj_Close_Change_(%)"].mean(),
-                        "variance": sr["Adj_Close_Change_(%)"].var(ddof=0),
-                        "metrics": metrics
+            n_processes = min(max(len(self.list_of_tickers) // 4, 1), mp.cpu_count())
+            
+
+            download_args = [(t, self.start_date, self.end_date) for t in self.list_of_tickers]
+            
+            with ProcessPoolExecutor(max_workers=n_processes) as executor:
+                  # Submit all download tasks
+                  future_to_ticker = {
+                        executor.submit(self._get_return_series, *args): args[0]
+                        for args in download_args
                   }
+                  
+                  for future in as_completed(future_to_ticker):
+                        ticker = future_to_ticker[future]
+                        try:
+                              sr, metrics = future.result()
+                              if sr is not None:
+                                    R[ticker] = {
+                                          "returns": sr,
+                                          "mean": sr["Adj_Close_Change_(%)"].mean(),
+                                          "variance": sr["Adj_Close_Change_(%)"].var(ddof=0),
+                                          "metrics": metrics
+                                    }
+                        except Exception as e:
+                              print(f"Error processing {ticker}: {e}")
+                              continue
+            
             self.securities = R
             return R
       
