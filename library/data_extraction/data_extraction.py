@@ -20,6 +20,8 @@ class DataExtractor:
       def _get_return_series(self, ticker, start="2020-01-01", end=None):
             """
             Download adjusted price data for a single ticker and return its daily return Series.
+
+            ## Read more on the Adj Close column with: [read yahoo's blog](https://help.yahoo.com/kb/SLN28256.html#:~:text=What%20is%20the%20adjusted%20close%3F) 
             """
             print(f"=> Downloading data for {ticker} from {start} to {end}")
             df = yf.download(ticker, start=start, end=end, auto_adjust=False) 
