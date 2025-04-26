@@ -1,1 +1,1 @@
-""" Some great data extraction functions"""
+""" Data extraction functions to download the ticker's data and extract the matrices (U and Sigma)"""

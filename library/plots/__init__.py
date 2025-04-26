@@ -1,0 +1,1 @@
+""" Class defining the different functions to plot the results of our computations """

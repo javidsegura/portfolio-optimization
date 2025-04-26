@@ -1,11 +1,6 @@
 
 
 - Trying to fix Rp may yield unsolvable results
-- You cant exceed expected returns with diversification, just minimize risks (cause its a linear combination)
-- Timeseries showing accuracy of results 
-- Excess return???
-- What is this: ∝ 
-- GMVP as the borderline?
 - Areas for improvement
        - Study of concavity
 - MPT is all about minimizing risk via diversification, not by increasing E[] over diversification

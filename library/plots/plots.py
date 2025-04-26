@@ -104,8 +104,6 @@ class Plots:
                   # Plot the point
                   ax.scatter(std, mean, color='red')
                   
-                  # Add annotation with security name
-                  # Slightly offset the text to avoid overlapping with the point
                   ax.annotate(security_name, 
                              (std, mean),
                              xytext=(5, 5),  # 5 points offset
@@ -119,7 +117,7 @@ class Plots:
                        include_individual_securities:bool=False
                        ):
             """
-            Plots the final results
+            Plots the final results. Allows for inclusion/exclusion of the different sets 
             """
             fig, ax = plt.subplots(figsize=(10, 6))
             if include_gmvp:
@@ -131,8 +129,6 @@ class Plots:
             if include_individual_securities:
                   self._plot_individual_securities(ax)
 
-
-
             ax.legend()
             ax.grid(True)
             ax.set_xlabel('Portfolio Standard Deviation')
@@ -140,13 +136,12 @@ class Plots:
             ax.set_title('Portfolio Optimization')
             plt.show()
       
-
-
       def plot_securities_distribution(self):
             """
             Plots for each security:
-                  • Left:  time‑series line of daily returns
-                  • Right: histogram (with KDE) of daily returns
+                  - Over-time price variation
+                  - Percentage variation distribution
+                  - Summary statistics of price varation
             """
             n = len(self.securities)
             fig, axes = plt.subplots(

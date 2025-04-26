@@ -17,7 +17,7 @@ class DataExtractor:
             self.SIGMA_INV = None
             self.ONE_VECTOR = None
             
-      def _get_return_series(self, ticker, start="2020-01-01", end=None):
+      def _get_return_series(self, ticker: str, start:str="2020-01-01", end:str=None):
             """
             Download adjusted price data for a single ticker and return its daily return Series.
 
@@ -29,7 +29,12 @@ class DataExtractor:
                         raise ValueError(f"No data for {ticker} in {start}–{end}")
             prices = df["Adj Close"] 
             metrics = prices.describe()
-            ret = prices.pct_change().dropna()
+            # Number of obseravtions
+            #metrics["n_observatios"] = str(len(prices))
+            # Jarque bera
+            stastic, pvalue = jarque_bera(prices)
+            #metrics["jarque_bera_p_value"] = str(pvalue)
+            ret = prices.pct_change(periods=7).dropna()
             ret.name = ticker
             ret.reset_index(inplace=True)
             ret.rename(columns={ticker: "Adj_Close_Change_(%)"}, inplace=True)
@@ -41,7 +46,8 @@ class DataExtractor:
             Returns a dict mapping ticker → dict with keys:
                   - "returns": pd.Series of daily returns
                   - "mean":    float mean(return)
-                  - "std":     float std(return)
+                  - "variance":     float variance(return)
+                  - "metrics": result of calling .describe() on the series (i.e: summary/descriptive statistics)
             Uses multiprocessing to parallelize data downloads.
             """
             R = {}
@@ -106,7 +112,7 @@ class DataExtractor:
             self.SIGMA_INV = np.linalg.inv(SIGMA)
             return SIGMA
 
-      def pca_shrinkage(self, n_components=None, var_threshold=None):
+      def pca_shrinkage(self, n_components:int=None, var_threshold:float=None):
             """
             Perform PCA-based spectral filtering on the covariance matrix by shrinking small eigenvalues.
 
@@ -180,7 +186,7 @@ class DataExtractor:
             return self.SIGMA, self.SIGMA_INV
  
       
-      def analayze_single_security_returns(self):
+      def single_security_returns(self):
             for security in self.securities:
                   print(f"Security: {security}")
                   print(f"Mean expected return: {self.securities[security]['mean']}")
