@@ -1,6 +1,7 @@
 # Linear Algebra Project
 
 This repository contains materials and code for Linear Algebra coursework and projects.
+[Access the paper here](https://www.overleaf.com/read/vcjcrvhffkxs#8ab3e5)
 
 ## Overview
 
