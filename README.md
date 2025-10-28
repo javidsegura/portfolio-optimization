@@ -6,7 +6,7 @@
 
 A rigorous implementation of Modern Portfolio Theory (MPT) and the Capital Asset Pricing Model (CAPM) with advanced linear algebra techniques for portfolio optimization. Features PCA-based covariance matrix denoising and comprehensive mathematical derivations.
 
-**📄 [View Full Paper](https://github.com/javidsegura/portfolio-optimization)** | **📓 [Jupyter Notebook](https://github.com/javidsegura/portfolio-optimization/blob/main/portfolio.ipynb)** | **📚 [Function Library](https://github.com/javidsegura/portfolio-optimization/tree/main/library)**
+**📄 [View Full Paper]([https://github.com/javidsegura/portfolio-optimization](https://www.overleaf.com/project/680257ae73d1ed222a3de163))** | **📓 [Jupyter Notebook](https://github.com/javidsegura/portfolio-optimization/blob/main/portfolio.ipynb)** | **📚 [Function Library](https://github.com/javidsegura/portfolio-optimization/tree/main/library)**
 
 ---
 
